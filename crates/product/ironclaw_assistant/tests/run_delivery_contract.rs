@@ -3217,6 +3217,55 @@ async fn observer_connect_nudge_reaches_unbound_senders_in_direct_and_shared_cha
     );
 }
 
+#[tokio::test]
+async fn observer_distinguishes_a_disconnected_shared_channel_from_an_unpaired_user() {
+    let harness = build_harness(
+        vec![scripted_state(TurnStatus::Running, None)],
+        true,
+        None,
+        Duration::from_millis(20),
+    );
+    harness
+        .observer
+        .observe_ack(
+            user_message_envelope_for_conversation(
+                ProductTriggerReason::BotMention,
+                "evt-channel-not-connected",
+                "conv-shared",
+            ),
+            ProductInboundAck::Rejected(ProductRejection::permanent(
+                ProductRejectionKind::ChannelNotConnected,
+                "shared conversation is not connected for this channel",
+            )),
+        )
+        .await;
+    let command = InboundCommandPayload::new("status", "", ProductTriggerReason::BotCommand)
+        .expect("command");
+    harness
+        .observer
+        .observe_ack(
+            envelope_for_conversation(
+                ProductInboundPayload::Command(command),
+                "evt-command-channel-not-connected",
+                "conv-shared",
+            ),
+            ProductInboundAck::Rejected(ProductRejection::permanent(
+                ProductRejectionKind::ChannelNotConnected,
+                "shared conversation is not connected for this channel",
+            )),
+        )
+        .await;
+
+    assert_eq!(
+        harness.adapter.texts(),
+        vec![
+            harness.connection_notices.channel_not_connected.clone(),
+            harness.connection_notices.channel_not_connected.clone(),
+        ],
+        "messages and commands use channel copy instead of account-pairing copy"
+    );
+}
+
 /// The nudge fires only for messages that ADDRESS the bot. A shared channel
 /// forwards ordinary chatter, and a `ReplyToBot` in a thread the bot was
 /// never bound to also rejects `BindingRequired` — nudging it would post a

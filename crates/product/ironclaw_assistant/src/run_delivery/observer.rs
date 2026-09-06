@@ -323,6 +323,12 @@ impl RunDeliveryObserver {
         if self.post_command_feedback(&envelope, &ack).await {
             return;
         }
+        if self
+            .post_channel_not_connected_notice(&envelope, &ack)
+            .await
+        {
+            return;
+        }
         // Rejected approval/auth feedback is a single best-effort post, not
         // a long-running delivery — handle before taking the semaphore.
         if self
@@ -1518,6 +1524,9 @@ impl RunDeliveryObserver {
                 ProductRejectionKind::PolicyDenied => {
                     "Commands can only be used in a direct conversation with Ironclaw.".to_string()
                 }
+                ProductRejectionKind::ChannelNotConnected => {
+                    self.connection_notices.channel_not_connected.clone()
+                }
                 // The connect-nudge path owns first-contact feedback.
                 ProductRejectionKind::BindingRequired => return false,
                 // Remaining terminal families intentionally settle without
@@ -1538,6 +1547,41 @@ impl RunDeliveryObserver {
                 envelope.external_conversation_ref(),
                 &text,
                 format!("command-feedback:{}", envelope.external_event_id().as_str()),
+            )
+            .await;
+        true
+    }
+
+    /// Tell a paired user that this shared conversation has not been admitted
+    /// without sending them through account pairing again. This runs before
+    /// the binding-authorized rejection path because the absent shared route
+    /// is the condition being reported.
+    async fn post_channel_not_connected_notice(
+        &self,
+        envelope: &ProductInboundEnvelope,
+        ack: &ProductInboundAck,
+    ) -> bool {
+        if !matches!(envelope.payload(), ProductInboundPayload::UserMessage(_)) {
+            return false;
+        }
+        let ProductInboundAck::Rejected(rejection) = ack else {
+            return false;
+        };
+        if !matches!(rejection.kind, ProductRejectionKind::ChannelNotConnected) {
+            return false;
+        }
+        let scope = self.notice_scope(envelope).await;
+        self.services
+            .post_notice(
+                DeliveryIntent::ConnectionStatus,
+                scope,
+                None,
+                envelope.external_conversation_ref(),
+                &self.connection_notices.channel_not_connected,
+                format!(
+                    "channel-not-connected:{}",
+                    envelope.external_event_id().as_str()
+                ),
             )
             .await;
         true

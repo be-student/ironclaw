@@ -704,7 +704,7 @@ fn resolved_binding_from_resolution(
 }
 
 fn shared_conversation_not_connected_error() -> ProductOperationFailure {
-    ProductOperationFailure::BindingRequired {
+    ProductOperationFailure::ChannelNotConnected {
         reason: "shared conversation is not connected for this channel".into(),
     }
 }

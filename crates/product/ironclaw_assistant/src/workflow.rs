@@ -1926,6 +1926,12 @@ fn terminal_ack_for_error(error: &ProductSurfaceFailure) -> Option<ProductInboun
         ProductSurfaceFailure::BindingRequired { reason } => Some(ProductInboundAck::Rejected(
             ProductRejection::permanent(ProductRejectionKind::BindingRequired, reason.clone()),
         )),
+        ProductSurfaceFailure::ChannelNotConnected { reason } => {
+            Some(ProductInboundAck::Rejected(ProductRejection::permanent(
+                ProductRejectionKind::ChannelNotConnected,
+                reason.clone(),
+            )))
+        }
         ProductSurfaceFailure::BindingAccessDenied => {
             Some(ProductInboundAck::Rejected(ProductRejection::permanent(
                 ProductRejectionKind::AccessDenied,

@@ -48,6 +48,7 @@ pub trait AccountConnectionStatusSource: Send + Sync + std::fmt::Debug {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChannelConnectionNoticePolicy {
     pub connect_required: String,
+    pub channel_not_connected: String,
     pub paired: String,
     pub already_paired_same_user: String,
     pub already_bound_to_other_user: String,
@@ -59,6 +60,9 @@ impl ChannelConnectionNoticePolicy {
         Self {
             connect_required: format!(
                 "👋 To use {display_name}, connect it in the Ironclaw web app, then message me here again."
+            ),
+            channel_not_connected: format!(
+                "This shared {display_name} conversation is not connected to IronClaw."
             ),
             paired: format!("✅ {display_name} is paired. You can talk to Ironclaw here."),
             already_paired_same_user: format!(

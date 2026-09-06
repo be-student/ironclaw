@@ -55,6 +55,12 @@ pub enum ProductOperationFailure {
     #[error("binding required: {reason}")]
     BindingRequired { reason: String },
 
+    /// The actor is paired, but this shared conversation is not connected to
+    /// the installation. This must remain distinct from `BindingRequired` so
+    /// callers do not prompt an already-paired user to connect their account.
+    #[error("channel not connected: {reason}")]
+    ChannelNotConnected { reason: String },
+
     /// The actor or route is not allowed to use the resolved thread.
     #[error("binding access denied")]
     BindingAccessDenied,
@@ -114,7 +120,7 @@ impl From<HostApiError> for ProductOperationFailure {
 /// The membrane projection: how a port failure is reported to a caller that
 /// only speaks [`ProductSurfaceError`].
 ///
-/// This is the *single* mapping table for these six discriminants —
+/// This is the *single* mapping table for these shared discriminants —
 /// `ironclaw_assistant`'s `lifecycle_product_surface_error` delegates its
 /// matching arms here rather than repeating the status choices, so the two
 /// paths cannot drift. It is a projection between two types this crate owns,
@@ -147,6 +153,7 @@ impl From<ProductOperationFailure> for ProductSurfaceError {
             // a rendered submission rejection is never a client's fault.
             ProductOperationFailure::BindingResolutionFailed { .. }
             | ProductOperationFailure::BindingRequired { .. }
+            | ProductOperationFailure::ChannelNotConnected { .. }
             | ProductOperationFailure::UnknownInstallation
             | ProductOperationFailure::TurnSubmissionRejected { .. } => {
                 ProductSurfaceError::internal_invariant()
@@ -222,6 +229,14 @@ mod tests {
                 false,
             ),
             (
+                ProductOperationFailure::ChannelNotConnected {
+                    reason: "shared route absent".into(),
+                },
+                ProductSurfaceErrorCode::Internal,
+                500,
+                false,
+            ),
+            (
                 ProductOperationFailure::UnknownInstallation,
                 ProductSurfaceErrorCode::Internal,
                 500,
@@ -285,6 +300,12 @@ mod tests {
                     reason: "actor is not paired".into(),
                 },
                 Some("actor is not paired"),
+            ),
+            (
+                ProductOperationFailure::ChannelNotConnected {
+                    reason: "shared route absent".into(),
+                },
+                Some("shared route absent"),
             ),
             (ProductOperationFailure::BindingAccessDenied, None),
             (ProductOperationFailure::UnknownInstallation, None),

@@ -4972,7 +4972,7 @@ async fn shared_route_without_admission_resolver_is_not_connected() {
 
     assert!(matches!(
         error,
-        ProductOperationFailure::BindingRequired { reason }
+        ProductOperationFailure::ChannelNotConnected { reason }
             if reason.contains("not connected")
     ));
 }
@@ -5175,7 +5175,7 @@ async fn shared_admission_gates_every_resolve_without_rebuilding_scope() {
         .expect_err("an unadmitted shared conversation must fail closed");
     assert!(matches!(
         error,
-        ProductOperationFailure::BindingRequired { reason }
+        ProductOperationFailure::ChannelNotConnected { reason }
             if reason.contains("not connected")
     ));
 
@@ -5230,7 +5230,7 @@ async fn shared_admission_gates_every_resolve_without_rebuilding_scope() {
         .expect_err("a disconnected shared conversation must not reset");
     assert!(matches!(
         reset_error,
-        ProductOperationFailure::BindingRequired { reason }
+        ProductOperationFailure::ChannelNotConnected { reason }
             if reason.contains("not connected")
     ));
 
@@ -5304,7 +5304,7 @@ async fn shared_admission_gates_every_resolve_without_rebuilding_scope() {
         .expect_err("a disconnected conversation must stop resolving immediately");
     assert!(matches!(
         disconnected,
-        ProductOperationFailure::BindingRequired { reason }
+        ProductOperationFailure::ChannelNotConnected { reason }
             if reason.contains("not connected")
     ));
     let disconnected_lookup = binding
@@ -5321,7 +5321,7 @@ async fn shared_admission_gates_every_resolve_without_rebuilding_scope() {
         .expect_err("a disconnected conversation must stop lookups immediately");
     assert!(matches!(
         disconnected_lookup,
-        ProductOperationFailure::BindingRequired { reason }
+        ProductOperationFailure::ChannelNotConnected { reason }
             if reason.contains("not connected")
     ));
 }
@@ -5380,7 +5380,7 @@ async fn unadmitted_shared_route_fails_before_actor_binding_side_effects() {
         .expect_err("an unadmitted shared conversation must fail closed");
     assert!(matches!(
         error,
-        ProductOperationFailure::BindingRequired { reason }
+        ProductOperationFailure::ChannelNotConnected { reason }
             if reason.contains("not connected")
     ));
     assert!(

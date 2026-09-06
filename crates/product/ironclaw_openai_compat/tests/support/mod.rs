@@ -564,14 +564,16 @@ fn service_error_from_rejection(
     param: &'static str,
 ) -> ProductSurfaceError {
     match rejection.kind {
-        ProductRejectionKind::BindingRequired => ProductSurfaceError {
-            code: ProductSurfaceErrorCode::NotFound,
-            kind: ProductSurfaceErrorKind::NotFound,
-            status_code: 404,
-            retryable: false,
-            field: Some(param.to_string()),
-            validation_code: None,
-        },
+        ProductRejectionKind::BindingRequired | ProductRejectionKind::ChannelNotConnected => {
+            ProductSurfaceError {
+                code: ProductSurfaceErrorCode::NotFound,
+                kind: ProductSurfaceErrorKind::NotFound,
+                status_code: 404,
+                retryable: false,
+                field: Some(param.to_string()),
+                validation_code: None,
+            }
+        }
         ProductRejectionKind::AccessDenied | ProductRejectionKind::PolicyDenied => {
             ProductSurfaceError {
                 code: ProductSurfaceErrorCode::Forbidden,

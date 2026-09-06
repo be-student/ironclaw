@@ -1276,6 +1276,8 @@ fn manifest_channel_account_setup_descriptors(
                 },
                 connection_notices: ChannelConnectionNoticePolicy {
                     connect_required: connection.notices.connect_required.clone(),
+                    channel_not_connected: ChannelConnectionNoticePolicy::generic(&manifest.name)
+                        .channel_not_connected,
                     paired: connection.notices.paired.clone(),
                     already_paired_same_user: connection.notices.already_paired_same_user.clone(),
                     already_bound_to_other_user: connection

@@ -950,6 +950,10 @@ impl GenericChannelHostAssembly {
                             self.deps.connect_link_base_url.as_deref(),
                             source.supports_private_delivery(),
                         ),
+                        channel_not_connected: ChannelConnectionNoticePolicy::generic(
+                            &source.resolved().name,
+                        )
+                        .channel_not_connected,
                         paired: connection.notices.paired.clone(),
                         already_paired_same_user: connection
                             .notices

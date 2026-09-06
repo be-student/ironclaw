@@ -7250,7 +7250,7 @@ fn session_rejection_error(
         | ProductRejectionKind::PolicyDenied => {
             ProductSurfaceError::from_status(ProductSurfaceErrorCode::Forbidden, 403, retryable)
         }
-        ProductRejectionKind::BindingRequired => {
+        ProductRejectionKind::BindingRequired | ProductRejectionKind::ChannelNotConnected => {
             ProductSurfaceError::from_status(ProductSurfaceErrorCode::NotFound, 404, retryable)
         }
         ProductRejectionKind::AmbiguousResolution | ProductRejectionKind::StaleGate => {

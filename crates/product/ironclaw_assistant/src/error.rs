@@ -74,6 +74,10 @@ pub enum ProductSurfaceFailure {
     #[error("binding required: {reason}")]
     BindingRequired { reason: String },
 
+    /// The actor is paired, but this shared conversation is not connected.
+    #[error("channel not connected: {reason}")]
+    ChannelNotConnected { reason: String },
+
     /// The actor or route is not allowed to use the resolved thread.
     #[error("binding access denied")]
     BindingAccessDenied,
@@ -219,6 +223,9 @@ impl From<ProductOperationFailure> for ProductSurfaceFailure {
             ProductOperationFailure::BindingRequired { reason } => {
                 ProductSurfaceFailure::BindingRequired { reason }
             }
+            ProductOperationFailure::ChannelNotConnected { reason } => {
+                ProductSurfaceFailure::ChannelNotConnected { reason }
+            }
             ProductOperationFailure::BindingAccessDenied => {
                 ProductSurfaceFailure::BindingAccessDenied
             }
@@ -259,7 +266,7 @@ fn surface_rejection_kind(category: TurnErrorCategory) -> ProductSurfaceRejectio
 
 /// Project a lifecycle failure onto the sanitized product-surface error.
 ///
-/// The six discriminants product shares with its port implementors delegate to
+/// The discriminants product shares with its port implementors delegate to
 /// `ProductOperationFailure`'s own projection rather than repeating the status
 /// choices, so this path and the one `ironclaw_extension_host` takes cannot
 /// drift apart. What stays here is the logging (contracts may not log) and the
@@ -288,6 +295,7 @@ pub fn lifecycle_product_surface_error(error: ProductSurfaceFailure) -> ProductS
             ProductOperationFailure::BindingResolutionFailed { reason }.into()
         }
         ProductSurfaceFailure::BindingRequired { .. }
+        | ProductSurfaceFailure::ChannelNotConnected { .. }
         | ProductSurfaceFailure::TurnSubmissionRejected { .. }
         | ProductSurfaceFailure::TurnSubmissionFailed { .. }
         | ProductSurfaceFailure::TurnResumeRejected { .. }
@@ -324,6 +332,14 @@ impl From<ProductSurfaceFailure> for ProductAdapterError {
                 }
             }
             ProductSurfaceFailure::BindingRequired { reason } => {
+                ProductAdapterError::SurfaceRejected {
+                    kind: ProductSurfaceRejectionKind::ScopeNotFound,
+                    status_code: 404,
+                    retryable: false,
+                    reason: RedactedString::new(reason),
+                }
+            }
+            ProductSurfaceFailure::ChannelNotConnected { reason } => {
                 ProductAdapterError::SurfaceRejected {
                     kind: ProductSurfaceRejectionKind::ScopeNotFound,
                     status_code: 404,
@@ -535,6 +551,14 @@ mod tests {
                 },
             ),
             (
+                ProductOperationFailure::ChannelNotConnected {
+                    reason: "shared route absent".into(),
+                },
+                ProductSurfaceFailure::ChannelNotConnected {
+                    reason: "shared route absent".into(),
+                },
+            ),
+            (
                 ProductOperationFailure::BindingAccessDenied,
                 ProductSurfaceFailure::BindingAccessDenied,
             ),
@@ -579,7 +603,7 @@ mod tests {
     }
 
     /// Product's lifecycle projection and the contract's own projection are the
-    /// same table for the six shared discriminants. Without this, a status
+    /// same table for the shared discriminants. Without this, a status
     /// change made in one crate would silently apply to only half the callers —
     /// the WebUI would answer 400 through product's lifecycle service and 503
     /// through the extension host's, for the identical failure.
@@ -588,6 +612,9 @@ mod tests {
         for boundary in [
             ProductOperationFailure::BindingResolutionFailed {
                 reason: "no tenant".into(),
+            },
+            ProductOperationFailure::ChannelNotConnected {
+                reason: "shared route absent".into(),
             },
             ProductOperationFailure::BindingAccessDenied,
             ProductOperationFailure::InvalidBindingRequest {

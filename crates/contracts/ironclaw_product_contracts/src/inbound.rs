@@ -992,6 +992,7 @@ impl ProductInboundEnvelope {
 #[serde(rename_all = "snake_case")]
 pub enum ProductRejectionKind {
     BindingRequired,
+    ChannelNotConnected,
     AccessDenied,
     UnknownInstallation,
     InvalidRequest,
@@ -1047,6 +1048,7 @@ impl ProductRejectionKind {
             Self::BindingRequired => {
                 "I couldn't match this reply to an active conversation. Reply in the approval thread, or use `approve gate:<ref>`."
             }
+            Self::ChannelNotConnected => "This shared conversation is not connected to IronClaw.",
             Self::AccessDenied => "You don't have access to resolve this request.",
             Self::UnknownInstallation => "This workspace isn't set up with IronClaw yet.",
             Self::InvalidRequest => {

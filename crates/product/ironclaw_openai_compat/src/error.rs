@@ -261,7 +261,7 @@ pub(crate) fn product_rejection_to_openai_error(
     param: Option<&str>,
 ) -> OpenAiCompatHttpError {
     match rejection.kind {
-        ProductRejectionKind::BindingRequired => {
+        ProductRejectionKind::BindingRequired | ProductRejectionKind::ChannelNotConnected => {
             OpenAiCompatHttpError::not_found(param.map(str::to_owned))
         }
         ProductRejectionKind::AccessDenied | ProductRejectionKind::PolicyDenied => {
