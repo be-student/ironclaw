@@ -160,6 +160,7 @@ mod tests {
         let policy = ChannelConnectionNoticePolicy::generic("Slack");
         for notice in [
             &policy.connect_required,
+            &policy.channel_not_connected,
             &policy.paired,
             &policy.already_paired_same_user,
             &policy.already_bound_to_other_user,
@@ -173,6 +174,7 @@ mod tests {
         // Each notice is distinct copy, not one string reused for five states.
         let all = [
             policy.connect_required.clone(),
+            policy.channel_not_connected.clone(),
             policy.paired.clone(),
             policy.already_paired_same_user.clone(),
             policy.already_bound_to_other_user.clone(),
