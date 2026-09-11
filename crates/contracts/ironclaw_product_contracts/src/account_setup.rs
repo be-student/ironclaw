@@ -171,7 +171,7 @@ mod tests {
                 "notice must name the channel: {notice}"
             );
         }
-        // Each notice is distinct copy, not one string reused for five states.
+        // Each notice is distinct copy, not one string reused for six states.
         let all = [
             policy.connect_required.clone(),
             policy.channel_not_connected.clone(),
