@@ -143,6 +143,9 @@ impl From<ProductOperationFailure> for ProductSurfaceError {
             ProductOperationFailure::BindingAccessDenied => {
                 ProductSurfaceError::from_status(ProductSurfaceErrorCode::Forbidden, 403, false)
             }
+            ProductOperationFailure::ChannelNotConnected { .. } => {
+                ProductSurfaceError::not_found()
+            }
             ProductOperationFailure::Transient { .. } => {
                 ProductSurfaceError::service_unavailable(true)
             }
@@ -153,7 +156,6 @@ impl From<ProductOperationFailure> for ProductSurfaceError {
             // a rendered submission rejection is never a client's fault.
             ProductOperationFailure::BindingResolutionFailed { .. }
             | ProductOperationFailure::BindingRequired { .. }
-            | ProductOperationFailure::ChannelNotConnected { .. }
             | ProductOperationFailure::UnknownInstallation
             | ProductOperationFailure::TurnSubmissionRejected { .. } => {
                 ProductSurfaceError::internal_invariant()
@@ -232,8 +234,8 @@ mod tests {
                 ProductOperationFailure::ChannelNotConnected {
                     reason: "shared route absent".into(),
                 },
-                ProductSurfaceErrorCode::Internal,
-                500,
+                ProductSurfaceErrorCode::NotFound,
+                404,
                 false,
             ),
             (

@@ -42,7 +42,7 @@ load-bearing clusters:
   (`operator_llm`, `operator_service`, `operator_secrets`), IronHub
   (`ironhub`), and `project_service` — the family's first port implemented
   *below* product (`ironclaw_identity::projects::service`).
-- **The boundary error:** `error::ProductOperationFailure` — six variants,
+- **The boundary error:** `error::ProductOperationFailure` — sanitized failures,
   plain payloads, projected onto `ProductSurfaceError` exactly once here.
 
 ## Depends on / consumed by
@@ -98,3 +98,7 @@ cargo test -p ironclaw_architecture_tests
 - Family boundary: [`../AGENTS.md`](../AGENTS.md).
 - Design record: PROPOSAL §6.1.3;
   `docs/internal/reborn/target-architecture/families/contracts.md`.
+
+An unadmitted shared channel route (`ChannelNotConnected`) projects to `NotFound`
+with HTTP 404, matching the product and OpenAI-compatible adapters. The internal
+reason remains available to its owner and is not exposed in the wire error.
